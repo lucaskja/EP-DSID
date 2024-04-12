@@ -34,22 +34,29 @@ class Main:
 
     @staticmethod
     def validar_endereco_porta(endereco_porta):
-        parts = endereco_porta.split(":")
-        if len(parts) != 2:
+        split = endereco_porta.split(":")
+        if len(split) != 2:
             raise ValueError(
                 "Endereço e porta deve ser no formato <endereco>:<porta>")
-        endereco, porta_str = parts
+        endereco, porta_str = split
         try:
             porta = int(porta_str)
         except ValueError:
             raise ValueError("Porta deve ser um número inteiro")
         return endereco, porta
 
+    @staticmethod
+    def ler_lista_vizinhos(nome_arquivo):
+        with open(nome_arquivo, 'r') as file:
+            vizinhos = file.readlines()
+        return vizinhos
+
     @classmethod
     def run(self):
         args = self.parse_argumentos()
         endereco, porta = self.validar_endereco_porta(args.endereco_porta)
-        main_instance = self(endereco, porta, args.vizinhos,
+        vizinhos = self.ler_lista_vizinhos(args.vizinhos)
+        main_instance = self(endereco, porta, vizinhos,
                              args.lista_chave_valor)
 
         main_instance.peer.start()
