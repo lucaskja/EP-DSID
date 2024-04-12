@@ -1,4 +1,5 @@
 from socket import *
+from threading import Thread
 
 
 class ServidorTCP:
@@ -12,7 +13,7 @@ class ServidorTCP:
             self.socket = socket(AF_INET, SOCK_STREAM)
             self.socket.bind((self.endereco, self.porta))
             self.socket.listen(1)
-            print(f'Escutando em {self.endereco}:{self.porta}')
+            print(f'Servidor criado: {self.endereco}:{self.porta}')
         except Exception as e:
             print(f'Erro: {e}')
 
@@ -20,9 +21,18 @@ class ServidorTCP:
         while True:
             client_socket, client_address = self.socket.accept()
             print(f'Conexão do cliente: {client_address}')
-            data = client_socket.recv(1024)
-            print(f'Recebido: {data.decode()}')
+            cliente_thread = Thread(target=self.handle_client, args=(
+                client_socket,))
+            cliente_thread.start()
+
+    def handle_client(self, client_socket):
+        while True:
+            data = client_socket.recv(1024).decode()
             if not data:
                 break
-            client_socket.sendall(data)
+            print(f'Recebido: {data}')
         client_socket.close()
+
+    def start(self):
+        self.bind()
+        self.run()

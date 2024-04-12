@@ -8,7 +8,7 @@ class Main:
         self.porta = porta
         self.vizinhos = vizinhos
         self.lista_chave_valor = lista_chave_valor
-        self.peer = Peer(self.endereco, self.porta)
+        self.ttl = 1
 
     @staticmethod
     def parse_argumentos():
@@ -47,25 +47,84 @@ class Main:
 
     @staticmethod
     def ler_lista_vizinhos(nome_arquivo):
+        if not nome_arquivo:
+            return None
         with open(nome_arquivo, 'r') as file:
-            vizinhos = file.readlines()
+            vizinhos = [vizinho.strip() for vizinho in file.readlines()]
         return vizinhos
+
+    @staticmethod
+    def listar_vizinhos(self):
+        print(f'Há {len(self.vizinhos)} vizinhos:')
+        for i, vizinho in enumerate(self.vizinhos):
+            print(f'\t[{i}] {vizinho}')
+
+    def hello(self, peer):
+        print("Escolha o vizinho:")
+        self.listar_vizinhos(self)
+        input_vizinho = input("")
+        vizinho = self.vizinhos[int(input_vizinho)]
+        print(
+            f'Encaminhando mensagem "{self.endereco}:{self.porta} 5 {self.ttl} HELLO" para {vizinho}')
+        self.peer.hello(vizinho)
+
+    @staticmethod
+    def ler_lista_chave_valor(nome_arquivo):
+        if not nome_arquivo:
+            return None
+        lista_chave_valor = {}
+        with open(nome_arquivo, 'r') as file:
+            linhas = file.readlines()
+            for linha in linhas:
+                chave, valor = linha.strip().split(" ")
+                lista_chave_valor[chave] = valor
+        return lista_chave_valor
 
     @classmethod
     def run(self):
         args = self.parse_argumentos()
         endereco, porta = self.validar_endereco_porta(args.endereco_porta)
         vizinhos = self.ler_lista_vizinhos(args.vizinhos)
+        lista_chave_valor = self.ler_lista_chave_valor(args.lista_chave_valor)
         main_instance = self(endereco, porta, vizinhos,
-                             args.lista_chave_valor)
+                             lista_chave_valor)
 
-        main_instance.peer.start()
+        peer = Peer(main_instance.endereco, main_instance.porta,
+                    main_instance.vizinhos, main_instance.lista_chave_valor)
+        peer.start()
 
-        # if main_instance.vizinhos:
-        #    peer_address = tuple(main_instance.vizinhos.split(':'))
-        #    main_instance.connect_to_peer(peer_address)
-        #    main_instance.enviar_mensagem("Hello from Main")
-        #    main_instance.receber_mensagem()
+        print("""
+Escolha o comando
+    [0] Listar vizinhos
+    [1] HELLO
+    [2] SEARCH (flooding)
+    [3] SEARCH (random walk)
+    [4] SEARCH (busca em profundidade)
+    [5] Estatisticas
+    [6] Alterar valor padrao de TTL
+    [9] Sair
+            """)
+        while True:
+            escolha = input("").split(" ")[0]
+
+            if escolha == "0":
+                main_instance.listar_vizinhos()
+            elif escolha == "1":
+                main_instance.hello(peer)
+            elif escolha == "2":
+                main_instance.listar_vizinhos()
+            elif escolha == "3":
+                main_instance.listar_vizinhos()
+            elif escolha == "4":
+                main_instance.listar_vizinhos()
+            elif escolha == "5":
+                main_instance.listar_vizinhos()
+            elif escolha == "6":
+                main_instance.listar_vizinhos()
+            elif escolha == "9":
+                break
+            else:
+                print("Opção inválida")
 
 
 if __name__ == "__main__":
