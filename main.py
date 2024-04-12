@@ -1,7 +1,5 @@
 import argparse
 from peer import Peer
-from cliente_tcp import ClienteTCP
-from servidor_tcp import ServidorTCP
 
 
 class Main:
@@ -11,8 +9,6 @@ class Main:
         self.vizinhos = vizinhos
         self.lista_chave_valor = lista_chave_valor
         self.peer = Peer(self.endereco, self.porta)
-        self.cliente = ClienteTCP(self.endereco, 5001)
-        self.servidor = ServidorTCP(self.endereco, self.porta)
 
     @staticmethod
     def parse_argumentos():
@@ -49,21 +45,6 @@ class Main:
             raise ValueError("Porta deve ser um número inteiro")
         return endereco, porta
 
-    def iniciar_servidor(self):
-        self.servidor.bind()
-
-    def connect_to_peer(self, peer_address):
-        self.cliente.connect(peer_address)
-        print(f"Connected to peer at {peer_address}")
-
-    def enviar_mensagem(self, mensagem):
-        self.cliente.send_data(mensagem)
-        print(f'Mensagem enviada: {mensagem}')
-
-    def receber_mensagem(self):
-        data = self.cliente.receive_data()
-        print(f"Mensagem recebida: {data}")
-
     @classmethod
     def run(self):
         args = self.parse_argumentos()
@@ -71,16 +52,13 @@ class Main:
         main_instance = self(endereco, porta, args.vizinhos,
                              args.lista_chave_valor)
 
-        # main_instance.iniciar_servidor()
-        # main_instance.servidor.run()
+        main_instance.peer.start()
 
-        main_instance.cliente.conectar()
-
-        if main_instance.vizinhos:
-            peer_address = tuple(main_instance.vizinhos.split(':'))
-            main_instance.connect_to_peer(peer_address)
-            main_instance.enviar_mensagem("Hello from Main")
-            main_instance.receber_mensagem()
+        # if main_instance.vizinhos:
+        #    peer_address = tuple(main_instance.vizinhos.split(':'))
+        #    main_instance.connect_to_peer(peer_address)
+        #    main_instance.enviar_mensagem("Hello from Main")
+        #    main_instance.receber_mensagem()
 
 
 if __name__ == "__main__":

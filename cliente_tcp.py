@@ -7,10 +7,10 @@ class ClienteTCP:
         self.porta = porta
         self.socket = None
 
-    def conectar(self):
+    def conectar(self, endereco, porta):
         try:
             self.socket = socket(AF_INET, SOCK_STREAM)
-            self.socket.connect((self.endereco, 5000))
+            self.socket.connect((endereco, porta))
             print(f'Conectado em {self.endereco}:{self.porta}')
         except Exception as e:
             print(f'Erro ao conetar: {e}')
