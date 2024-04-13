@@ -8,7 +8,6 @@ class Main:
         self.porta = porta
         self.vizinhos = vizinhos
         self.lista_chave_valor = lista_chave_valor
-        self.ttl = 1
 
     @staticmethod
     def parse_argumentos():
@@ -52,22 +51,7 @@ class Main:
         with open(nome_arquivo, 'r') as file:
             vizinhos = [vizinho.strip() for vizinho in file.readlines()]
         return vizinhos
-
-    @staticmethod
-    def listar_vizinhos(self):
-        print(f'Há {len(self.vizinhos)} vizinhos:')
-        for i, vizinho in enumerate(self.vizinhos):
-            print(f'\t[{i}] {vizinho}')
-
-    def hello(self, peer):
-        print("Escolha o vizinho:")
-        self.listar_vizinhos(self)
-        input_vizinho = input("")
-        vizinho = self.vizinhos[int(input_vizinho)]
-        print(
-            f'Encaminhando mensagem "{self.endereco}:{self.porta} 5 {self.ttl} HELLO" para {vizinho}')
-        self.peer.hello(vizinho)
-
+    
     @staticmethod
     def ler_lista_chave_valor(nome_arquivo):
         if not nome_arquivo:
@@ -79,6 +63,22 @@ class Main:
                 chave, valor = linha.strip().split(" ")
                 lista_chave_valor[chave] = valor
         return lista_chave_valor
+
+    def listar_vizinhos(self):
+        print(f'Há {len(self.vizinhos)} vizinhos:')
+        for i, vizinho in enumerate(self.vizinhos):
+            print(f'\t[{i}] {vizinho}')
+            
+    def hello(self, peer):
+        print("Escolha o vizinho:")
+        self.listar_vizinhos()
+        input_vizinho = input("")
+        vizinho = self.vizinhos[int(input_vizinho)]
+        mensagem = f"{self.endereco}:{self.porta} {peer.sequencia} {self.ttl} HELLO"
+        print(
+            f'Encaminhando mensagem "{mensagem}" para {vizinho}')
+        peer.enviar(vizinho, mensagem)
+        peer.sequencia += 1
 
     @classmethod
     def run(self):
@@ -120,7 +120,11 @@ Escolha o comando
             elif escolha == "5":
                 main_instance.listar_vizinhos()
             elif escolha == "6":
-                main_instance.listar_vizinhos()
+                input_ttl = input("Digite o novo valor de TTL: ")
+                try:
+                    main_instance.ttl = int(input_ttl)
+                except ValueError:
+                    print("TTL deve ser um número inteiro")
             elif escolha == "9":
                 break
             else:

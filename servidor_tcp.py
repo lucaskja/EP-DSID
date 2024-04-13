@@ -13,7 +13,7 @@ class ServidorTCP:
             self.socket = socket(AF_INET, SOCK_STREAM)
             self.socket.bind((self.endereco, self.porta))
             self.socket.listen(1)
-            print(f'Servidor criado: {self.endereco}:{self.porta}')
+            print(f'Servidor criado: {self.endereco}:{self.porta}\n')
         except Exception as e:
             print(f'Erro: {e}')
 

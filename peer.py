@@ -11,6 +11,8 @@ class Peer:
         self.vizinhos = vizinhos
         self.lista_chave_valor = lista_chave_valor
         self.servidor = ServidorTCP(endereco, porta)
+        self.ttl = 1
+        self.sequencia = 1
 
     def start_servidor(self):
         servidor_thread = Thread(target=self.servidor.start)
@@ -21,25 +23,23 @@ class Peer:
             return
         for vizinho in self.vizinhos:
             endereco, porta = vizinho.split(":")
-            try:
-                cliente = socket(AF_INET, SOCK_STREAM)
-                cliente.connect((endereco, int(porta)))
-                print(f'Conectado ao vizinho: {vizinho}')
-                cliente.sendall(b"HELLO")
-                cliente.close()
-            except Exception as e:
-                print(f'Erro ao conectar ao vizinho: {vizinho} - {e}')
+            self.enviar(vizinho, f"{endereco}:{porta} {self.sequencia} {self.ttl} HELLO")
 
-    def hello(self, endereco, porta):
-            try:
-                cliente = socket(AF_INET, SOCK_STREAM)
-                cliente.connect((endereco, porta))
-                cliente.sendall(b"HELLO")
-                print(f'Enviado ao vizinho: {endereco}:{porta}')
-                cliente.close()
-            except Exception as e:
-                print(f'Erro ao conectar ao vizinho: {vizinho} - {e}')
+    def enviar(self, vizinho, mensagem):
+        print(f'Tentando adicionar vizinho {vizinho}')
+        try:
+            print(f'Encaminhando mensagem "{mensagem}" para {vizinho}')
+            cliente = socket(AF_INET, SOCK_STREAM)
+            cliente.connect((vizinho.split(":")[0], int(vizinho.split(":")[1])))
+            cliente.sendall(mensagem.encode())
+            print(f'\nEnvio feito com sucesso: {mensagem}')
+            cliente.close()
+        except Exception as e:
+            print(f'\tErro ao conectar!')
+        finally:
+            self.sequencia += 1
 
     def start(self):
         self.start_servidor()
+        sleep(0.5)
         self.conectar_vizinhos()
