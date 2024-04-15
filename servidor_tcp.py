@@ -31,7 +31,14 @@ class ServidorTCP:
             if not data:
                 break
             print(f'Recebido: {data}')
+            try:
+                self.trata_mensagem(data)
+            except Exception as e:
+                print(f'Erro: {e}')
         client_socket.close()
+        
+    def trata_mensagem(self, mensagem):
+        pass
 
     def start(self):
         self.bind()

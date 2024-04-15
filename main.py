@@ -77,7 +77,7 @@ class Main:
         mensagem = f"{self.endereco}:{self.porta} {peer.sequencia} {self.ttl} HELLO"
         print(
             f'Encaminhando mensagem "{mensagem}" para {vizinho}')
-        peer.enviar(vizinho, mensagem)
+        peer.enviar_mensagem(vizinho, mensagem)
         peer.sequencia += 1
 
     @classmethod

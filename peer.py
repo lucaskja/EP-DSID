@@ -23,16 +23,16 @@ class Peer:
             return
         for vizinho in self.vizinhos:
             endereco, porta = vizinho.split(":")
-            self.enviar(vizinho, f"{endereco}:{porta} {self.sequencia} {self.ttl} HELLO")
+            self.enviar_mensagem(vizinho, f"{endereco}:{porta} {self.sequencia} {self.ttl} HELLO")
 
-    def enviar(self, vizinho, mensagem):
+    def enviar_mensagem(self, vizinho, mensagem):
         print(f'Tentando adicionar vizinho {vizinho}')
         try:
             print(f'Encaminhando mensagem "{mensagem}" para {vizinho}')
             cliente = socket(AF_INET, SOCK_STREAM)
             cliente.connect((vizinho.split(":")[0], int(vizinho.split(":")[1])))
             cliente.sendall(mensagem.encode())
-            print(f'\nEnvio feito com sucesso: {mensagem}')
+            print(f'Envio feito com sucesso: {mensagem}')
             cliente.close()
         except Exception as e:
             print(f'\tErro ao conectar!')
