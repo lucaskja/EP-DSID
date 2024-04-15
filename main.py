@@ -6,13 +6,14 @@ class Main:
     def __init__(self, endereco, porta, vizinhos=None, lista_chave_valor=None):
         self.endereco = endereco
         self.porta = porta
-        self.vizinhos = vizinhos
-        self.lista_chave_valor = lista_chave_valor
+        self.vizinhos = vizinhos or []
+        self.lista_chave_valor = lista_chave_valor or {}
 
     @staticmethod
     def parse_argumentos():
+        # Configuração do parser de argumentos da linha de comando
         parser = argparse.ArgumentParser(
-            description="Rode o programa com os argumentos abaixo:"
+            description="Execute o programa com os seguintes argumentos:"
         )
         parser.add_argument(
             "endereco_porta",
@@ -20,12 +21,12 @@ class Main:
             help="Endereço e porta no formato <endereco>:<porta>",
         )
         parser.add_argument(
-            "vizinhos", type=str, help="Lista de vizinhos", nargs="?"
+            "vizinhos", type=str, help="Arquivo contendo lista de vizinhos", nargs="?"
         )
         parser.add_argument(
             "lista_chave_valor",
             type=str,
-            help="Lista de chave e valor",
+            help="Arquivo contendo pares chave-valor",
             nargs="?",
         )
 
@@ -65,20 +66,19 @@ class Main:
         return lista_chave_valor
 
     def listar_vizinhos(self):
+        # Exibir a lista de vizinhos
         print(f'Há {len(self.vizinhos)} vizinhos:')
         for i, vizinho in enumerate(self.vizinhos):
             print(f'\t[{i}] {vizinho}')
             
     def hello(self, peer):
+        # Função para enviar uma mensagem HELLO para um vizinho escolhido
         print("Escolha o vizinho:")
         self.listar_vizinhos()
         input_vizinho = input("")
         vizinho = self.vizinhos[int(input_vizinho)]
-        mensagem = f"{self.endereco}:{self.porta} {peer.sequencia} {self.ttl} HELLO"
-        print(
-            f'Encaminhando mensagem "{mensagem}" para {vizinho}')
+        mensagem = f"{peer.endereco}:{peer.porta} {peer.sequencia} {peer.ttl} HELLO"
         peer.enviar_mensagem(vizinho, mensagem)
-        peer.sequencia += 1
 
     @classmethod
     def run(self):
