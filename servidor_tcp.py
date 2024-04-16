@@ -102,13 +102,13 @@ class ServidorTCP:
         print(f'\tValor encontrada!\n\t\tchave: {chave} valor: {valor}')
         if modo == "FL":
             print(f'\t\tFlooding hop count: {hop_count}')
-            self.media_saltos_flooding.append(hop_count)
+            self.media_saltos_flooding.append(int(hop_count))
         elif modo == "RW":
             print(f'\t\tRandom walk hop count: {hop_count}')
-            self.media_saltos_random_walk.append(hop_count)
+            self.media_saltos_random_walk.append(int(hop_count))
         elif modo == "BP":
             print(f'\t\tBusca em profundidade hop count: {hop_count}')
-            self.media_saltos_busca_profundidade.append(hop_count)
+            self.media_saltos_busca_profundidade.append(int(hop_count))
                     
     def processa_flooding(self, mensagem):
         # Incrementar o total de mensagens flooding

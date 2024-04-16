@@ -122,9 +122,9 @@ Estatisticas
     Total de mensagens de flooding vistas: {peer.total_mensagens_flooding}
     Total de mensagens de random walk vistas: {peer.total_mensagens_random_walk}
     Total de mensagens de busca em profundidade vistas: {peer.total_mensagens_busca_profundidade}
-    Media de saltos ate encontrar destino por flooding: {np.mean(peer.media_saltos_flooding)}
-    Media de saltos ate encontrar destino por random walk: {np.mean(peer.media_saltos_random_walk)}
-    Media de saltos ate encontrar destino por busca em profundidade: {np.mean(peer.media_saltos_busca_profundidade)}
+    Media de saltos ate encontrar destino por flooding: {np.mean(peer.media_saltos_flooding)} (dp: {np.std(peer.media_saltos_flooding)})
+    Media de saltos ate encontrar destino por random walk: {np.mean(peer.media_saltos_random_walk)} (dp: {np.std(peer.media_saltos_random_walk)})
+    Media de saltos ate encontrar destino por busca em profundidade: {np.mean(peer.media_saltos_busca_profundidade)} (dp: {np.std(peer.media_saltos_busca_profundidade)})
               """)
     
     def bye(self, peer):
