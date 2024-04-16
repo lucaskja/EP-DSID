@@ -1,3 +1,6 @@
+import sys
+import numpy as np
+from random import choice
 from socket import socket, AF_INET, SOCK_STREAM
 from threading import Thread
 from time import sleep
@@ -9,9 +12,9 @@ class ServidorTCP:
         # Inicializa o servidor com o endereço, porta, lista de vizinhos e lista de chave-valor.
         self.endereco = endereco
         self.porta = porta
-        self.vizinhos = vizinhos
+        self.vizinhos = vizinhos or []
         self.vizinhos_conectados = []
-        self.lista_chave_valor = lista_chave_valor
+        self.lista_chave_valor = lista_chave_valor or []
         self.socket = None
         self.mensagens_vistas_flooding = set()
         self.mensagens_vistas_busca_profundidade = set()
@@ -39,11 +42,11 @@ class ServidorTCP:
         while True:
             client_socket, client_address = self.socket.accept()
             # print(f'Conexão do cliente: {client_address}')
-            cliente_thread = Thread(target=self.handle_client, args=(
+            cliente_thread = Thread(target=self.recebe_mensagens, args=(
                 client_socket,))
             cliente_thread.start()
 
-    def handle_client(self, client_socket):
+    def recebe_mensagens(self, client_socket):
         # Lida com as mensagens recebidas dos clientes.
         while True:
             data = client_socket.recv(1024).decode()
@@ -83,6 +86,71 @@ class ServidorTCP:
         except Exception as e:
             print(f'\tErro ao conectar! {e}')
             
+    def listar_vizinhos(self):
+        # Exibir a lista de vizinhos
+        print(f'Há {len(self.vizinhos)} vizinhos:')
+        for i, vizinho in enumerate(self.vizinhos):
+            print(f'\t[{i}] {vizinho}')
+            
+    def iniciar_hello(self):
+        # Função para enviar uma mensagem HELLO para um vizinho escolhido
+        print("Escolha o vizinho:")
+        self.listar_vizinhos()
+        input_vizinho = input("")
+        vizinho = self.vizinhos[int(input_vizinho)]
+        mensagem = f"{self.endereco}:{self.porta} {self.sequencia} {self.ttl} HELLO"
+        self.enviar_mensagem(vizinho, mensagem)
+        
+    def iniciar_flooding(self):
+        # Função para enviar uma mensagem SEARCH (flooding)
+        input_chave = input("Digite a chave a ser buscada\n")
+        ip_origem = f"{self.endereco}:{self.porta}"
+        mensagem = f"{ip_origem} {self.sequencia} {self.ttl} SEARCH FL {self.porta} {input_chave} 1"
+        self.mensagens_vistas_flooding.add((ip_origem, self.sequencia))
+        for vizinho in self.vizinhos:
+            self.enviar_mensagem(vizinho, mensagem)
+    
+    def iniciar_random_walk(self):
+        # Função para enviar uma mensagem SEARCH (random walk)
+        input_chave = input("Digite a chave a ser buscada\n")
+        ip_origem = f"{self.endereco}:{self.porta}"
+        mensagem = f"{ip_origem} {self.sequencia} {self.ttl} SEARCH RW {self.porta} {input_chave} 1"
+        vizinho_escolhido = choice(self.vizinhos)
+        self.enviar_mensagem(vizinho_escolhido, mensagem)
+    
+    def iniciar_busca_profundidade(self):
+        # Função para enviar uma mensagem SEARCH (busca em profundidade)
+        input_chave = input("Digite a chave a ser buscada\n")
+        
+        # Inicia a busca em profundidade com a chave e o número de sequência fornecidos
+        noh_mae = f"{self.endereco}:{self.porta}"
+        mensagem = f"{noh_mae} {self.sequencia} {self.ttl} SEARCH BP {self.porta} {input_chave} 1"
+        vizinhos_candidatos = self.vizinhos.copy()
+        while vizinhos_candidatos:
+            proximo = choice(vizinhos_candidatos)
+            vizinho_ativo = proximo
+            vizinhos_candidatos.remove(proximo)
+            self.enviar_mensagem(proximo, mensagem)
+    
+    def iniciar_estatisticas(self):
+        # Função para exibir estatísticas
+        print(f"""
+Estatisticas
+    Total de mensagens de flooding vistas: {self.total_mensagens_flooding}
+    Total de mensagens de random walk vistas: {self.total_mensagens_random_walk}
+    Total de mensagens de busca em profundidade vistas: {self.total_mensagens_busca_profundidade}
+    Media de saltos ate encontrar destino por flooding: {np.mean(self.media_saltos_flooding)} (dp: {np.std(self.media_saltos_flooding)})
+    Media de saltos ate encontrar destino por random walk: {np.mean(self.media_saltos_random_walk)} (dp: {np.std(self.media_saltos_random_walk)})
+    Media de saltos ate encontrar destino por busca em profundidade: {np.mean(self.media_saltos_busca_profundidade)} (dp: {np.std(self.media_saltos_busca_profundidade)})
+              """)
+    
+    def iniciar_bye(self):
+        # Função para enviar uma mensagem BYE para todos os vizinhos
+        print("Saindo...")
+        self.desconectar_vizinhos()
+        sleep(2)
+        sys.exit(0)
+            
     def processa_hello(self, mensagem):
         # Adiciona o vizinho na lista de vizinhos conectados.
         origin = mensagem.split(" ")[0]
@@ -120,7 +188,6 @@ class ServidorTCP:
         ttl = int(mensagem_split[2])
         chave = mensagem_split[6]
         hop_count = int(mensagem_split[7])
-        
         # Verificar se a mensagem ja foi vista
         if (endereco_origem, sequencia) in self.mensagens_vistas_flooding:
             print(f'\tFlooding: Mensagem repetida! {mensagem}')
@@ -145,8 +212,7 @@ class ServidorTCP:
         for vizinho in self.vizinhos:
             if vizinho == endereco_origem:
                 continue
-            self.enviar_mensagem(vizinho, f"{endereco_origem} {sequencia} {ttl} SEARCH FL {self.porta} {chave} {hop_count + 1}")
-            
+            self.enviar_mensagem(vizinho, f"{endereco_origem} {sequencia} {ttl} SEARCH FL {self.porta} {chave} {hop_count + 1}")        
         
     def processa_random_walk(self, mensagem):
         # Incrementar o total de mensagens random walk
@@ -248,7 +314,6 @@ class ServidorTCP:
             print(f'Mensagem desconhecida: {mensagem}')
         self.sequencia += 1
             
-
     def start(self):
         # Inicia o servidor e conecta os vizinhos.
         self.bind()

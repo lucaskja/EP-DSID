@@ -1,17 +1,8 @@
 import argparse
-import sys
-import numpy as np
-from random import choice
 from time import sleep
 from servidor_tcp import ServidorTCP
 
 class Main:
-    def __init__(self, endereco, porta, vizinhos=None, lista_chave_valor=None):
-        self.endereco = endereco
-        self.porta = porta
-        self.vizinhos = vizinhos or []
-        self.lista_chave_valor = lista_chave_valor or {}
-
     @staticmethod
     def parse_argumentos():
         # Configuração do parser de argumentos da linha de comando
@@ -69,82 +60,15 @@ class Main:
                 lista_chave_valor[chave] = valor
         return lista_chave_valor
 
-    def listar_vizinhos(self):
-        # Exibir a lista de vizinhos
-        print(f'Há {len(self.vizinhos)} vizinhos:')
-        for i, vizinho in enumerate(self.vizinhos):
-            print(f'\t[{i}] {vizinho}')
-            
-    def hello(self, peer):
-        # Função para enviar uma mensagem HELLO para um vizinho escolhido
-        print("Escolha o vizinho:")
-        self.listar_vizinhos()
-        input_vizinho = input("")
-        vizinho = self.vizinhos[int(input_vizinho)]
-        mensagem = f"{peer.endereco}:{peer.porta} {peer.sequencia} {peer.ttl} HELLO"
-        peer.enviar_mensagem(vizinho, mensagem)
-        
-    def iniciar_flooding(self, peer):
-        # Função para enviar uma mensagem SEARCH (flooding)
-        input_chave = input("Digite a chave a ser buscada\n")
-        ip_origem = f"{peer.endereco}:{peer.porta}"
-        mensagem = f"{ip_origem} {peer.sequencia} {peer.ttl} SEARCH FL {peer.porta} {input_chave} 1"
-        peer.mensagens_vistas_flooding.add((ip_origem, peer.sequencia))
-        for vizinho in peer.vizinhos:
-            peer.enviar_mensagem(vizinho, mensagem)
-    
-    def iniciar_random_walk(self, peer):
-        # Função para enviar uma mensagem SEARCH (random walk)
-        input_chave = input("Digite a chave a ser buscada\n")
-        ip_origem = f"{peer.endereco}:{peer.porta}"
-        mensagem = f"{ip_origem} {peer.sequencia} {peer.ttl} SEARCH RW {peer.porta} {input_chave} 1"
-        vizinho_escolhido = choice(peer.vizinhos)
-        peer.enviar_mensagem(vizinho_escolhido, mensagem)
-    
-    def iniciar_busca_profundidade(self, peer):
-        # Função para enviar uma mensagem SEARCH (busca em profundidade)
-        input_chave = input("Digite a chave a ser buscada\n")
-        
-        # Inicia a busca em profundidade com a chave e o número de sequência fornecidos
-        noh_mae = f"{peer.endereco}:{peer.porta}"
-        mensagem = f"{noh_mae} {peer.sequencia} {peer.ttl} SEARCH BP {peer.porta} {input_chave} 1"
-        vizinhos_candidatos = peer.vizinhos.copy()
-        while vizinhos_candidatos:
-            proximo = choice(vizinhos_candidatos)
-            vizinho_ativo = proximo
-            vizinhos_candidatos.remove(proximo)
-            peer.enviar_mensagem(proximo, mensagem)
-    
-    def estatisticas(self, peer):
-        # Função para exibir estatísticas
-        print(f"""
-Estatisticas
-    Total de mensagens de flooding vistas: {peer.total_mensagens_flooding}
-    Total de mensagens de random walk vistas: {peer.total_mensagens_random_walk}
-    Total de mensagens de busca em profundidade vistas: {peer.total_mensagens_busca_profundidade}
-    Media de saltos ate encontrar destino por flooding: {np.mean(peer.media_saltos_flooding)} (dp: {np.std(peer.media_saltos_flooding)})
-    Media de saltos ate encontrar destino por random walk: {np.mean(peer.media_saltos_random_walk)} (dp: {np.std(peer.media_saltos_random_walk)})
-    Media de saltos ate encontrar destino por busca em profundidade: {np.mean(peer.media_saltos_busca_profundidade)} (dp: {np.std(peer.media_saltos_busca_profundidade)})
-              """)
-    
-    def bye(self, peer):
-        # Função para enviar uma mensagem BYE para todos os vizinhos
-        print("Saindo...")
-        peer.desconectar_vizinhos()
-        sleep(2)
-        sys.exit(0)
-
     @classmethod
     def run(self):
         args = self.parse_argumentos()
         endereco, porta = self.validar_endereco_porta(args.endereco_porta)
         vizinhos = self.ler_lista_vizinhos(args.vizinhos)
         lista_chave_valor = self.ler_lista_chave_valor(args.lista_chave_valor)
-        main_instance = self(endereco, porta, vizinhos,
-                             lista_chave_valor)
-
-        peer = ServidorTCP(main_instance.endereco, main_instance.porta,
-                    main_instance.vizinhos, main_instance.lista_chave_valor)
+        print(f"Lista chave valor: {lista_chave_valor}")
+        peer = ServidorTCP(endereco, porta,
+                    vizinhos, lista_chave_valor)
         peer.start()
 
         while True:
@@ -161,25 +85,26 @@ Escolha o comando
             escolha = input("").split(" ")[0]
 
             if escolha == "0":
-                main_instance.listar_vizinhos()
+                peer.listar_vizinhos()
             elif escolha == "1":
-                main_instance.hello(peer)
+                peer.iniciar_hello(
+                )
             elif escolha == "2":
-                main_instance.iniciar_flooding(peer)
+                peer.iniciar_flooding()
             elif escolha == "3":
-                main_instance.iniciar_random_walk(peer)
+                peer.iniciar_random_walk()
             elif escolha == "4":
-                main_instance.iniciar_busca_profundidade(peer)
+                peer.iniciar_busca_profundidade()
             elif escolha == "5":
-                main_instance.estatisticas(peer)
+                peer.iniciar_estatisticas()
             elif escolha == "6":
-                input_ttl = input("Digite o novo valor de TTL: ")
+                input_ttl = input("Digite o novo valor de TTL:\n")
                 try:
-                    main_instance.peer.servidor.ttl = int(input_ttl)
+                    peer.ttl = int(input_ttl)
                 except ValueError:
                     print("TTL deve ser um número inteiro")
             elif escolha == "9":
-                main_instance.bye(peer)
+                peer.iniciar_bye()
             else:
                 print("Opção inválida")
             sleep(1)
