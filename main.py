@@ -1,6 +1,8 @@
 import argparse
-from peer import Peer
-
+import sys
+from random import choice
+from time import sleep
+from servidor_tcp import ServidorTCP
 
 class Main:
     def __init__(self, endereco, porta, vizinhos=None, lista_chave_valor=None):
@@ -62,6 +64,7 @@ class Main:
             linhas = file.readlines()
             for linha in linhas:
                 chave, valor = linha.strip().split(" ")
+                print(f"Adicionando par ({chave}, {valor}) na tabela local")
                 lista_chave_valor[chave] = valor
         return lista_chave_valor
 
@@ -79,6 +82,45 @@ class Main:
         vizinho = self.vizinhos[int(input_vizinho)]
         mensagem = f"{peer.endereco}:{peer.porta} {peer.sequencia} {peer.ttl} HELLO"
         peer.enviar_mensagem(vizinho, mensagem)
+        
+    def iniciar_flooding(self, peer):
+        # Função para enviar uma mensagem SEARCH (flooding)
+        input_chave = input("Digite a chave a ser buscada\n")
+        ip_origem = f"{peer.endereco}:{peer.porta}"
+        mensagem = f"{ip_origem} {peer.sequencia} {peer.ttl} SEARCH FL {peer.porta} {input_chave} 1"
+        peer.mensagens_vistas.add((ip_origem, peer.sequencia))
+        for vizinho in peer.vizinhos:
+            peer.enviar_mensagem(vizinho, mensagem)
+    
+    def iniciar_random_walk(self, peer):
+        # Função para enviar uma mensagem SEARCH (random walk)
+        input_chave = input("Digite a chave a ser buscada\n")
+        ip_origem = f"{peer.endereco}:{peer.porta}"
+        mensagem = f"{ip_origem} {peer.sequencia} {peer.ttl} SEARCH RW {peer.porta} {input_chave} 1"
+        vizinho_escolhido = choice(peer.vizinhos)
+        peer.enviar_mensagem(vizinho_escolhido, mensagem)
+    
+    def iniciar_busca_profundidade(self, peer):
+        # Função para enviar uma mensagem SEARCH (busca em profundidade)
+        input_chave = input("Digite a chave a ser buscada\n")
+        noh_mae = f"{peer.endereco}:{peer.porta}"
+        mensagem = f"{noh_mae} {peer.sequencia} {peer.ttl} SEARCH BP {peer.porta} {input_chave} 1"
+        vizinhos_candidatos = peer.vizinhos.copy()
+        proximo_vizinho = choice(vizinhos_candidatos)
+        vizinho_ativo = proximo_vizinho
+        vizinhos_candidatos.remove(proximo_vizinho)
+        peer.enviar_mensagem(proximo_vizinho, mensagem)
+    
+    def estatisticas(self, peer):
+        # Função para exibir estatísticas
+        pass
+    
+    def bye(self, peer):
+        # Função para enviar uma mensagem BYE para todos os vizinhos
+        print("Saindo...")
+        peer.desconectar_vizinhos()
+        sleep(2)
+        sys.exit(0)
 
     @classmethod
     def run(self):
@@ -89,11 +131,12 @@ class Main:
         main_instance = self(endereco, porta, vizinhos,
                              lista_chave_valor)
 
-        peer = Peer(main_instance.endereco, main_instance.porta,
+        peer = ServidorTCP(main_instance.endereco, main_instance.porta,
                     main_instance.vizinhos, main_instance.lista_chave_valor)
         peer.start()
 
-        print("""
+        while True:
+            print("""
 Escolha o comando
     [0] Listar vizinhos
     [1] HELLO
@@ -102,9 +145,7 @@ Escolha o comando
     [4] SEARCH (busca em profundidade)
     [5] Estatisticas
     [6] Alterar valor padrao de TTL
-    [9] Sair
-            """)
-        while True:
+    [9] Sair""")
             escolha = input("").split(" ")[0]
 
             if escolha == "0":
@@ -112,23 +153,24 @@ Escolha o comando
             elif escolha == "1":
                 main_instance.hello(peer)
             elif escolha == "2":
-                main_instance.listar_vizinhos()
+                main_instance.iniciar_flooding(peer)
             elif escolha == "3":
-                main_instance.listar_vizinhos()
+                main_instance.iniciar_random_walk(peer)
             elif escolha == "4":
-                main_instance.listar_vizinhos()
+                main_instance.iniciar_busca_profundidade(peer)
             elif escolha == "5":
-                main_instance.listar_vizinhos()
+                main_instance.estatisticas(peer)
             elif escolha == "6":
                 input_ttl = input("Digite o novo valor de TTL: ")
                 try:
-                    main_instance.ttl = int(input_ttl)
+                    main_instance.peer.servidor.ttl = int(input_ttl)
                 except ValueError:
                     print("TTL deve ser um número inteiro")
             elif escolha == "9":
-                break
+                main_instance.bye(peer)
             else:
                 print("Opção inválida")
+            sleep(1)
 
 
 if __name__ == "__main__":
