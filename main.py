@@ -88,7 +88,7 @@ class Main:
         input_chave = input("Digite a chave a ser buscada\n")
         ip_origem = f"{peer.endereco}:{peer.porta}"
         mensagem = f"{ip_origem} {peer.sequencia} {peer.ttl} SEARCH FL {peer.porta} {input_chave} 1"
-        peer.mensagens_vistas.add((ip_origem, peer.sequencia))
+        peer.mensagens_vistas_flooding.add((ip_origem, peer.sequencia))
         for vizinho in peer.vizinhos:
             peer.enviar_mensagem(vizinho, mensagem)
     
