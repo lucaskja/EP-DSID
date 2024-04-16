@@ -1,5 +1,6 @@
 import argparse
 import sys
+import numpy as np
 from random import choice
 from time import sleep
 from servidor_tcp import ServidorTCP
@@ -121,11 +122,10 @@ Estatisticas
     Total de mensagens de flooding vistas: {peer.total_mensagens_flooding}
     Total de mensagens de random walk vistas: {peer.total_mensagens_random_walk}
     Total de mensagens de busca em profundidade vistas: {peer.total_mensagens_busca_profundidade}
-    Media de saltos ate encontrar destino por flooding: {peer.media_saltos_flooding.mean()}
-    Media de saltos ate encontrar destino por random walk: {peer.media_saltos_random_walk.mean()}
-    Media de saltos ate encontrar destino por busca em profundidade: {peer.media_saltos_busca_profundidade.mean()}
+    Media de saltos ate encontrar destino por flooding: {np.mean(peer.media_saltos_flooding)}
+    Media de saltos ate encontrar destino por random walk: {np.mean(peer.media_saltos_random_walk)}
+    Media de saltos ate encontrar destino por busca em profundidade: {np.mean(peer.media_saltos_busca_profundidade)}
               """)
-        pass
     
     def bye(self, peer):
         # Função para enviar uma mensagem BYE para todos os vizinhos
