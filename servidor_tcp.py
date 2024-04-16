@@ -101,22 +101,27 @@ class ServidorTCP:
         ttl = int(mensagem_split[2])
         chave = mensagem_split[6]
         hop_count = int(mensagem_split[7])
+        
         # Verificar se a mensagem ja foi vista
         if (endereco_origem, sequencia) in self.mensagens_vistas_flooding:
             print(f'\tFlooding: Mensagem repetida! {mensagem}')
             return
+        
         # Adicionar a mensagem na lista de mensagens vistas
         self.mensagens_vistas_flooding.add((endereco_origem, sequencia))
+        
         # Verificar se a chave esta na lista chave valor
         if chave in self.lista_chave_valor:
             print(f'\tChave encontrada!')
             self.enviar_mensagem(endereco_origem, f"{self.endereco}:{self.porta} {self.sequencia} {self.ttl} VAL FL {chave} {self.lista_chave_valor[chave]} {hop_count}")
             return
+        
         # Decrementar TTL e verificar se ele é maior que 0
         ttl -= 1
         if ttl == 0:
             print(f'\tTTL igual a zero, descartando mensagem')
             return
+        
         # Incrementar hop count e enviar a mensagem para todos os vizinhos
         for vizinho in self.vizinhos:
             if vizinho == endereco_origem:
@@ -132,16 +137,19 @@ class ServidorTCP:
         ttl = int(mensagem_split[2])
         chave = mensagem_split[6]
         hop_count = int(mensagem_split[7])
+        
         # Verificar se a chave esta na lista chave valor
         if chave in self.lista_chave_valor:
             print(f'\tChave encontrada!')
             self.enviar_mensagem(endereco_origem, f"{self.endereco}:{self.porta} {self.sequencia} {self.ttl} VAL RW {chave} {self.lista_chave_valor[chave]} {hop_count}")
             return
+        
         # Decrementar TTL e verificar se ele é maior que 0
         ttl -= 1
         if ttl == 0:
             print(f'\tTTL igual a zero, descartando mensagem')
             return
+        
         # Incrementar hop count e enviar a mensagem para um vizinho aleatorio
         vizinho_escolhido = choice(self.vizinhos)
         self.enviar_mensagem(vizinho_escolhido, f"{endereco_origem} {sequencia} {ttl} SEARCH RW {self.porta} {chave} {hop_count + 1}")
@@ -152,33 +160,44 @@ class ServidorTCP:
         endereco_origem = mensagem_split[0]
         sequencia = mensagem_split[1]
         ttl = int(mensagem_split[2])
-        ultimo_vizinho = f'{self.endereco}:{mensagem_split[5]}'
         chave = mensagem_split[6]
         hop_count = int(mensagem_split[7])
-        vizinho_ativo = mensagem_split[0]
+
         # Verificar se a chave esta na lista chave valor
         if chave in self.lista_chave_valor:
             print(f'\tChave encontrada!')
             self.enviar_mensagem(endereco_origem, f"{self.endereco}:{self.porta} {self.sequencia} {self.ttl} VAL BP {chave} {self.lista_chave_valor[chave]} {hop_count}")
             return
+        
         # Decrementar TTL e verificar se ele é maior que 0
         ttl -= 1
         if ttl == 0:
             print(f'\tTTL igual a zero, descartando mensagem')
             return
-        # Se for a primeira vez que a mensagem é vista, adicionar na lista de mensagens vistas
+        
+        # Verifica se é a primeira vez que a mensagem é vista
         if (endereco_origem, sequencia) not in self.mensagens_vistas_busca_profundidade:
-            self.mensagens_vistas_busca_profundidade.add((endereco_origem, sequencia))
-            noh_mae = ultimo_vizinho
+            # Adiciona o endereço origem à lista de vizinhos candidatos
             vizinhos_candidatos = self.vizinhos.copy()
-        # Remover o ultimo vizinho da lista de vizinhos candidatos
-        vizinhos_candidatos.remove(ultimo_vizinho)
-        # Condição de parada
-        if noh_mae == f'{self.endereco}:{self.porta}' and not vizinhos_candidatos == 0 and vizinho_ativo == ultimo_vizinho:
-            print(f'\tBP: Nao foi possivel localizar a chave {chave}')
+            vizinhos_candidatos.remove(endereco_origem)
+            # Adiciona a mensagem à lista de mensagens vistas
+            self.mensagens_vistas_busca_profundidade.add((endereco_origem, sequencia))
+        else:
+            vizinhos_candidatos = self.vizinhos.copy()
+        
+        # Verifica a condição de parada
+        if endereco_origem == self.endereco and not vizinhos_candidatos:
+            print("BP: Não foi possível localizar a chave", chave)
             return
-        
-        
+
+        # Encontra o próximo vizinho ativo
+        if self.endereco == endereco_origem:
+            proximo = endereco_origem
+        else:
+            proximo = choice(vizinhos_candidatos)
+
+        # Envia a mensagem para o próximo vizinho ativo
+        self.enviar_mensagem(proximo, mensagem)
     
     def processa_bye(self, mensagem):
         # Remove o vizinho da lista de vizinhos conectados.

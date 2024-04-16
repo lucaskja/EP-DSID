@@ -103,13 +103,16 @@ class Main:
     def iniciar_busca_profundidade(self, peer):
         # Função para enviar uma mensagem SEARCH (busca em profundidade)
         input_chave = input("Digite a chave a ser buscada\n")
+        
+        # Inicia a busca em profundidade com a chave e o número de sequência fornecidos
         noh_mae = f"{peer.endereco}:{peer.porta}"
         mensagem = f"{noh_mae} {peer.sequencia} {peer.ttl} SEARCH BP {peer.porta} {input_chave} 1"
         vizinhos_candidatos = peer.vizinhos.copy()
-        proximo_vizinho = choice(vizinhos_candidatos)
-        vizinho_ativo = proximo_vizinho
-        vizinhos_candidatos.remove(proximo_vizinho)
-        peer.enviar_mensagem(proximo_vizinho, mensagem)
+        while vizinhos_candidatos:
+            proximo = choice(vizinhos_candidatos)
+            vizinho_ativo = proximo
+            vizinhos_candidatos.remove(proximo)
+            peer.enviar_mensagem(proximo, mensagem)
     
     def estatisticas(self, peer):
         # Função para exibir estatísticas
