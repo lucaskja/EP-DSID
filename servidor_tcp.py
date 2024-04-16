@@ -17,6 +17,12 @@ class ServidorTCP:
         self.mensagens_vistas_busca_profundidade = set()
         self.ttl = 100
         self.sequencia = 1
+        self.valores_hop_count_flooding = []
+        self.valores_hop_count_random_walk = []
+        self.valores_hop_count_busca_profundidade = []
+        self.total_mensagens_flooding = 0
+        self.total_mensagens_random_walk = 0
+        self.total_mensagens_busca_profundidade = 0
 
     def bind(self):
         # Liga o servidor ao endereço e porta especificados.
@@ -89,11 +95,24 @@ class ServidorTCP:
     def processa_valor(self, mensagem):
         # Processa a mensagem VAL e exibe a chave e o valor.
         mensagem_split = mensagem.split(" ")
+        modo = mensagem_split[4]
         chave = mensagem_split[5]
         valor = mensagem_split[6]
+        hop_count = mensagem_split[7]
         print(f'\tValor encontrada!\n\t\tchave: {chave} valor: {valor}')
+        if modo == "FL":
+            print(f'\t\tFlooding hop count: {hop_count}')
+            self.valores_hop_count_flooding.append(hop_count)
+        elif modo == "RW":
+            print(f'\t\tRandom walk hop count: {hop_count}')
+            self.valores_hop_count_random_walk.append(hop_count)
+        elif modo == "BP":
+            print(f'\t\tBusca em profundidade hop count: {hop_count}')
+            self.valores_hop_count_busca_profundidade.append(hop_count)
                     
     def processa_flooding(self, mensagem):
+        # Incrementar o total de mensagens flooding
+        self.total_mensagens_flooding += 1
         # Pegar o endereco de origem, a sequencia, o ttl, a chave, o hop count da mensagem
         mensagem_split = mensagem.split(" ")
         endereco_origem = mensagem_split[0]
@@ -130,6 +149,8 @@ class ServidorTCP:
             
         
     def processa_random_walk(self, mensagem):
+        # Incrementar o total de mensagens random walk
+        self.total_mensagens_random_walk += 1
         # Pegar o endereco de origem, a sequencia, o ttl, a chave, o hop count da mensagem
         mensagem_split = mensagem.split(" ")
         endereco_origem = mensagem_split[0]
@@ -155,6 +176,8 @@ class ServidorTCP:
         self.enviar_mensagem(vizinho_escolhido, f"{endereco_origem} {sequencia} {ttl} SEARCH RW {self.porta} {chave} {hop_count + 1}")
     
     def processa_busca_profundidade(self, mensagem):
+        # Incrementar o total de mensagens busca em profundidade
+        self.total_mensagens_busca_profundidade += 1
         # Pegar o endereco de origem, a sequencia, o ttl, a chave, o hop count da mensagem
         mensagem_split = mensagem.split(" ")
         endereco_origem = mensagem_split[0]
@@ -214,12 +237,13 @@ class ServidorTCP:
             self.processa_valor(mensagem)
         elif mensagem_split[3] == "BYE":
             self.processa_bye(mensagem)
-        elif mensagem_split[4] == "FL":
-            self.processa_flooding(mensagem)
-        elif mensagem_split[4] == "RW":
-            self.processa_random_walk(mensagem)
-        elif mensagem_split[4] == "BP":
-            self.processa_busca_profundidade(mensagem)
+        elif mensagem_split[3] == "SEARCH":
+            if mensagem_split[4] == "FL":
+                self.processa_flooding(mensagem)
+            elif mensagem_split[4] == "RW":
+                self.processa_random_walk(mensagem)
+            elif mensagem_split[4] == "BP":
+                self.processa_busca_profundidade(mensagem)
         else:
             print(f'Mensagem desconhecida: {mensagem}')
         self.sequencia += 1
