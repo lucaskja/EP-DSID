@@ -17,9 +17,9 @@ class ServidorTCP:
         self.mensagens_vistas_busca_profundidade = set()
         self.ttl = 100
         self.sequencia = 1
-        self.valores_hop_count_flooding = []
-        self.valores_hop_count_random_walk = []
-        self.valores_hop_count_busca_profundidade = []
+        self.media_saltos_flooding = []
+        self.media_saltos_random_walk = []
+        self.media_saltos_busca_profundidade = []
         self.total_mensagens_flooding = 0
         self.total_mensagens_random_walk = 0
         self.total_mensagens_busca_profundidade = 0
