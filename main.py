@@ -2,6 +2,7 @@ import argparse
 from time import sleep
 from servidor_tcp import ServidorTCP
 
+
 class Main:
     @staticmethod
     def parse_argumentos():
@@ -46,7 +47,7 @@ class Main:
         with open(nome_arquivo, 'r') as file:
             vizinhos = [vizinho.strip() for vizinho in file.readlines()]
         return vizinhos
-    
+
     @staticmethod
     def ler_lista_chave_valor(nome_arquivo):
         if not nome_arquivo:
@@ -68,7 +69,7 @@ class Main:
         lista_chave_valor = self.ler_lista_chave_valor(args.lista_chave_valor)
         print(f"Lista chave valor: {lista_chave_valor}")
         peer = ServidorTCP(endereco, porta,
-                    vizinhos, lista_chave_valor)
+                           vizinhos, lista_chave_valor)
         peer.start()
 
         while True:
