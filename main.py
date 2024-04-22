@@ -16,7 +16,10 @@ class Main:
             help="Endereço e porta no formato <endereco>:<porta>",
         )
         parser.add_argument(
-            "vizinhos", type=str, help="Arquivo contendo lista de vizinhos", nargs="?"
+            "vizinhos",
+            type=str,
+            help="Arquivo contendo lista de vizinhos",
+            nargs="?",
         )
         parser.add_argument(
             "lista_chave_valor",

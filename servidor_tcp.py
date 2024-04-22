@@ -4,7 +4,6 @@ from random import choice
 from socket import socket, AF_INET, SOCK_STREAM
 from threading import Thread
 from time import sleep
-from random import choice
 
 
 class ServidorTCP:
