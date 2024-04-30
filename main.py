@@ -1,6 +1,6 @@
 import argparse
 from time import sleep
-from servidor_tcp import ServidorTCP
+from sistema_p2p import SistemaP2P
 
 
 class Main:
@@ -71,7 +71,7 @@ class Main:
         vizinhos = self.ler_lista_vizinhos(args.vizinhos)
         lista_chave_valor = self.ler_lista_chave_valor(args.lista_chave_valor)
         print(f"Lista chave valor: {lista_chave_valor}")
-        peer = ServidorTCP(endereco, porta,
+        peer = SistemaP2P(endereco, porta,
                            vizinhos, lista_chave_valor)
         peer.start()
 

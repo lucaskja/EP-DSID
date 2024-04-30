@@ -6,7 +6,7 @@ from threading import Thread
 from time import sleep
 
 
-class ServidorTCP:
+class SistemaP2P:
     def __init__(self, endereco, porta, vizinhos=None, lista_chave_valor=None):
         # Inicializa o servidor com o endereço, porta, lista de vizinhos e lista de chave-valor.
         self.endereco = endereco
