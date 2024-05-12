@@ -11,13 +11,14 @@ class SistemaP2P:
         # Inicializa o servidor com o endereço, porta, lista de vizinhos e lista de chave-valor.
         self.endereco = endereco
         self.porta = porta
+        self.endereco_proprio = f'{self.endereco}:{self.porta}'
         self.vizinhos = vizinhos or []
         self.vizinhos_conectados = []
         self.lista_chave_valor = lista_chave_valor or []
         self.socket = None
         self.mensagens_vistas_flooding = set()
         self.mensagens_vistas_busca_profundidade = set()
-        self.ttl = 100
+        self.ttl = 7
         self.sequencia = 1
         self.media_saltos_flooding = []
         self.media_saltos_random_walk = []
@@ -25,6 +26,10 @@ class SistemaP2P:
         self.total_mensagens_flooding = 0
         self.total_mensagens_random_walk = 0
         self.total_mensagens_busca_profundidade = 0
+        self.vizinho_ativo = ""
+        self.noh_mae = ""
+        self.proximo = ""
+        self.vizinhos_candidatos = self.vizinhos.copy()
 
     def bind(self):
         # Liga o servidor ao endereço e porta especificados.
@@ -106,17 +111,15 @@ class SistemaP2P:
     def iniciar_flooding(self):
         # Função para enviar uma mensagem SEARCH (flooding)
         input_chave = input("Digite a chave a ser buscada\n")
-        ip_origem = f"{self.endereco}:{self.porta}"
-        mensagem = f"{ip_origem} {self.sequencia} {self.ttl} SEARCH FL {self.porta} {input_chave} 1"
-        self.mensagens_vistas_flooding.add((ip_origem, self.sequencia))
+        mensagem = f"{self.endereco_proprio} {self.sequencia} {self.ttl} SEARCH FL {self.porta} {input_chave} 1"
+        self.mensagens_vistas_flooding.add((self.endereco_proprio, self.sequencia))
         for vizinho in self.vizinhos:
             self.enviar_mensagem(vizinho, mensagem)
 
     def iniciar_random_walk(self):
         # Função para enviar uma mensagem SEARCH (random walk)
         input_chave = input("Digite a chave a ser buscada\n")
-        ip_origem = f"{self.endereco}:{self.porta}"
-        mensagem = f"{ip_origem} {self.sequencia} {self.ttl} SEARCH RW {self.porta} {input_chave} 1"
+        mensagem = f"{self.endereco_proprio} {self.sequencia} {self.ttl} SEARCH RW {self.porta} {input_chave} 1"
         vizinho_escolhido = choice(self.vizinhos)
         self.enviar_mensagem(vizinho_escolhido, mensagem)
 
@@ -125,14 +128,16 @@ class SistemaP2P:
         input_chave = input("Digite a chave a ser buscada\n")
 
         # Inicia a busca em profundidade com a chave e o número de sequência fornecidos
-        noh_mae = f"{self.endereco}:{self.porta}"
-        mensagem = f"{noh_mae} {self.sequencia} {self.ttl} SEARCH BP {self.porta} {input_chave} 1"
-        vizinhos_candidatos = self.vizinhos.copy()
-        while vizinhos_candidatos:
-            proximo = choice(vizinhos_candidatos)
-            vizinho_ativo = proximo
-            vizinhos_candidatos.remove(proximo)
-            self.enviar_mensagem(proximo, mensagem)
+        self.noh_mae = self.endereco_proprio
+        mensagem = f"{self.noh_mae} {self.sequencia} {self.ttl} SEARCH BP {self.porta} {input_chave} 1"
+        self.vizinhos_candidatos = self.vizinhos.copy()
+        self.proximo = choice(self.vizinhos_candidatos)
+        self.vizinho_ativo = self.proximo
+        self.vizinhos_candidatos.remove(self.proximo)
+        self.mensagens_vistas_busca_profundidade.add(
+                (self.endereco_proprio, self.sequencia))
+        print(f"self.mensagens_vistas_busca_profundidade: {self.mensagens_vistas_busca_profundidade}")
+        self.enviar_mensagem(self.proximo, mensagem)
 
     def iniciar_estatisticas(self):
         # Função para exibir estatísticas
@@ -199,7 +204,7 @@ Estatisticas
         if chave in self.lista_chave_valor:
             print('\tChave encontrada!')
             self.enviar_mensagem(
-                endereco_origem, f"{self.endereco}:{self.porta} {self.sequencia} {self.ttl} VAL FL {chave} {self.lista_chave_valor[chave]} {hop_count}")
+                endereco_origem, f"{self.endereco_proprio} {sequencia} {self.ttl} VAL FL {chave} {self.lista_chave_valor[chave]} {hop_count}")
             return
 
         # Decrementar TTL e verificar se ele é maior que 0
@@ -230,7 +235,7 @@ Estatisticas
         if chave in self.lista_chave_valor:
             print('\tChave encontrada!')
             self.enviar_mensagem(
-                endereco_origem, f"{self.endereco}:{self.porta} {self.sequencia} {self.ttl} VAL RW {chave} {self.lista_chave_valor[chave]} {hop_count}")
+                endereco_origem, f"{self.endereco_proprio} {sequencia} {self.ttl} VAL RW {chave} {self.lista_chave_valor[chave]} {hop_count}")
             return
 
         # Decrementar TTL e verificar se ele é maior que 0
@@ -252,14 +257,16 @@ Estatisticas
         endereco_origem = mensagem_split[0]
         sequencia = mensagem_split[1]
         ttl = int(mensagem_split[2])
+        endereco_last_hop = f"{self.endereco}:{mensagem_split[5]}"
         chave = mensagem_split[6]
         hop_count = int(mensagem_split[7])
-
+            
         # Verificar se a chave esta na lista chave valor
         if chave in self.lista_chave_valor:
             print('\tChave encontrada!')
             self.enviar_mensagem(
-                endereco_origem, f"{self.endereco}:{self.porta} {self.sequencia} {self.ttl} VAL BP {chave} {self.lista_chave_valor[chave]} {hop_count}")
+                endereco_origem, f"{self.endereco_proprio} {sequencia} {self.ttl} VAL BP {chave} {self.lista_chave_valor[chave]} {hop_count}")
+            # self.inicia_reseta_busca_profundidade()
             return
 
         # Decrementar TTL e verificar se ele é maior que 0
@@ -269,29 +276,45 @@ Estatisticas
             return
 
         # Verifica se é a primeira vez que a mensagem é vista
-        if (endereco_origem, sequencia) not in self.mensagens_vistas_busca_profundidade:
+        if (endereco_origem, int(sequencia)) not in self.mensagens_vistas_busca_profundidade:
             # Adiciona o endereço origem à lista de vizinhos candidatos
-            vizinhos_candidatos = self.vizinhos.copy()
-            vizinhos_candidatos.remove(endereco_origem)
+            self.noh_mae = endereco_last_hop
+            self.vizinhos_candidatos = self.vizinhos.copy()
+            # self.reseta_busca_profundidade()
             # Adiciona a mensagem à lista de mensagens vistas
             self.mensagens_vistas_busca_profundidade.add(
                 (endereco_origem, sequencia))
-        else:
-            vizinhos_candidatos = self.vizinhos.copy()
-
+            
+        if endereco_last_hop in self.vizinhos_candidatos:
+            self.vizinhos_candidatos.remove(endereco_last_hop)
+                    
         # Verifica a condição de parada
-        if endereco_origem == self.endereco and not vizinhos_candidatos:
-            print("BP: Não foi possível localizar a chave", chave)
+        if self.noh_mae == self.endereco_proprio and self.vizinho_ativo == endereco_last_hop and not self.vizinhos_candidatos:
+            print(f"\tBP: Não foi possível localizar a chave {chave}")
             return
-
-        # Encontra o próximo vizinho ativo
-        if self.endereco == endereco_origem:
-            proximo = endereco_origem
+        
+        # print(f"294 - self.proximo: {self.proximo}")
+        if self.vizinho_ativo and self.vizinho_ativo != endereco_last_hop:
+            print("\tBP: ciclo detectado, devolvendo a mensagem...")
+            self.proximo = endereco_last_hop
+        elif not self.vizinhos_candidatos:
+            print("\tBP: nenhum vizinho encontrou a chave, retrocedendo...")
+            self.proximo = self.noh_mae
         else:
-            proximo = choice(vizinhos_candidatos)
-
-        # Envia a mensagem para o próximo vizinho ativo
-        self.enviar_mensagem(proximo, mensagem)
+            self.proximo = choice(self.vizinhos_candidatos)
+            self.vizinho_ativo = self.proximo
+            self.vizinhos_candidatos.remove(self.proximo)
+        # print(f"305 - self.proximo: {self.proximo}")
+            
+        hop_count += 1
+        mensagem = f"{endereco_origem} {sequencia} {ttl} SEARCH BP {self.porta} {chave} 1"
+        self.enviar_mensagem(self.proximo, mensagem)
+        
+    def reseta_busca_profundidade(self):
+        self.vizinho_ativo = ""
+        self.noh_mae = ""
+        self.proximo = ""
+        self.vizinhos_candidatos = self.vizinhos.copy()
 
     def processa_bye(self, mensagem):
         # Remove o vizinho da lista de vizinhos conectados.
@@ -315,6 +338,8 @@ Estatisticas
                 self.processa_random_walk(mensagem)
             elif mensagem_split[4] == "BP":
                 self.processa_busca_profundidade(mensagem)
+        elif mensagem_split[3] == "RESET_BP":
+            self.processa_reseta_busca_profundidade(mensagem)
         else:
             print(f'Mensagem desconhecida: {mensagem}')
         self.sequencia += 1
