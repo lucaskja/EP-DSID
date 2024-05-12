@@ -268,7 +268,6 @@ Estatisticas
         sequencia = mensagem_split[1]
         ttl = int(mensagem_split[2])
         endereco_last_hop = self.acha_endereco_vizinho(mensagem_split[5])
-        print(endereco_last_hop)
         chave = mensagem_split[6]
         hop_count = int(mensagem_split[7])
             
