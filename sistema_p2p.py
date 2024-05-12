@@ -71,6 +71,7 @@ class SistemaP2P:
             print(f'Tentando adicionar vizinho {vizinho}')
             self.enviar_mensagem(
                 vizinho, f"{self.endereco}:{self.porta} {self.sequencia} {self.ttl} HELLO")
+        self.sequencia += 1
 
     def desconectar_vizinhos(self):
         # Envia uma mensagem BYE para cada vizinho.
@@ -79,6 +80,7 @@ class SistemaP2P:
         for vizinho in self.vizinhos:
             self.enviar_mensagem(
                 vizinho, f"{self.endereco}:{self.porta} {self.sequencia} {self.ttl} BYE")
+        self.sequencia += 1
 
     def enviar_mensagem(self, vizinho, mensagem):
         # Envia uma mensagem para um vizinho específico.
@@ -107,6 +109,7 @@ class SistemaP2P:
         vizinho = self.vizinhos[int(input_vizinho)]
         mensagem = f"{self.endereco}:{self.porta} {self.sequencia} {self.ttl} HELLO"
         self.enviar_mensagem(vizinho, mensagem)
+        self.sequencia += 1
 
     def iniciar_flooding(self):
         # Função para enviar uma mensagem SEARCH (flooding)
@@ -115,6 +118,7 @@ class SistemaP2P:
         self.mensagens_vistas_flooding.add((self.endereco_proprio, self.sequencia))
         for vizinho in self.vizinhos:
             self.enviar_mensagem(vizinho, mensagem)
+        self.sequencia += 1
 
     def iniciar_random_walk(self):
         # Função para enviar uma mensagem SEARCH (random walk)
@@ -122,6 +126,7 @@ class SistemaP2P:
         mensagem = f"{self.endereco_proprio} {self.sequencia} {self.ttl} SEARCH RW {self.porta} {input_chave} 1"
         vizinho_escolhido = choice(self.vizinhos)
         self.enviar_mensagem(vizinho_escolhido, mensagem)
+        self.sequencia += 1
 
     def iniciar_busca_profundidade(self):
         # Função para enviar uma mensagem SEARCH (busca em profundidade)
@@ -137,6 +142,7 @@ class SistemaP2P:
         self.mensagens_vistas_busca_profundidade.add(
                 (self.endereco_proprio, self.sequencia))
         self.enviar_mensagem(self.proximo, mensagem)
+        self.sequencia += 1
 
     def iniciar_estatisticas(self):
         # Função para exibir estatísticas
@@ -337,7 +343,6 @@ Estatisticas
             self.processa_reseta_busca_profundidade(mensagem)
         else:
             print(f'Mensagem desconhecida: {mensagem}')
-        self.sequencia += 1
 
     def start(self):
         # Inicia o servidor e conecta os vizinhos.
