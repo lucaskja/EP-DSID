@@ -291,7 +291,7 @@ Estatisticas
             print(f"\tBP: Não foi possível localizar a chave {chave}")
             return
 
-        if self.vizinho_ativo and self.vizinho_ativo != endereco_last_hop:
+        if self.vizinho_ativo != "" and self.vizinho_ativo != endereco_last_hop:
             print("\tBP: ciclo detectado, devolvendo a mensagem...")
             self.proximo = endereco_last_hop
         elif not self.vizinhos_candidatos:
