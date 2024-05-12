@@ -100,6 +100,11 @@ class SistemaP2P:
         print(f'Há {len(self.vizinhos)} vizinhos:')
         for i, vizinho in enumerate(self.vizinhos):
             print(f'\t[{i}] {vizinho}')
+            
+    def acha_endereco_vizinho(self, porta):
+        for vizinho in self.vizinhos:
+            if vizinho.split(":")[1] == porta:
+                return vizinho
 
     def iniciar_hello(self):
         # Função para enviar uma mensagem HELLO para um vizinho escolhido
@@ -262,7 +267,8 @@ Estatisticas
         endereco_origem = mensagem_split[0]
         sequencia = mensagem_split[1]
         ttl = int(mensagem_split[2])
-        endereco_last_hop = f"{self.endereco}:{mensagem_split[5]}"
+        endereco_last_hop = self.acha_endereco_vizinho(mensagem_split[5])
+        print(endereco_last_hop)
         chave = mensagem_split[6]
         hop_count = int(mensagem_split[7])
             
