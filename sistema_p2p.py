@@ -136,7 +136,6 @@ class SistemaP2P:
         self.vizinhos_candidatos.remove(self.proximo)
         self.mensagens_vistas_busca_profundidade.add(
                 (self.endereco_proprio, self.sequencia))
-        print(f"self.mensagens_vistas_busca_profundidade: {self.mensagens_vistas_busca_profundidade}")
         self.enviar_mensagem(self.proximo, mensagem)
 
     def iniciar_estatisticas(self):
