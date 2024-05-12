@@ -265,7 +265,6 @@ Estatisticas
             print('\tChave encontrada!')
             self.enviar_mensagem(
                 endereco_origem, f"{self.endereco_proprio} {sequencia} {self.ttl} VAL BP {chave} {self.lista_chave_valor[chave]} {hop_count}")
-            # self.inicia_reseta_busca_profundidade()
             return
 
         # Decrementar TTL e verificar se ele é maior que 0
@@ -291,8 +290,7 @@ Estatisticas
         if self.noh_mae == self.endereco_proprio and self.vizinho_ativo == endereco_last_hop and not self.vizinhos_candidatos:
             print(f"\tBP: Não foi possível localizar a chave {chave}")
             return
-        
-        # print(f"294 - self.proximo: {self.proximo}")
+
         if self.vizinho_ativo and self.vizinho_ativo != endereco_last_hop:
             print("\tBP: ciclo detectado, devolvendo a mensagem...")
             self.proximo = endereco_last_hop
@@ -303,10 +301,8 @@ Estatisticas
             self.proximo = choice(self.vizinhos_candidatos)
             self.vizinho_ativo = self.proximo
             self.vizinhos_candidatos.remove(self.proximo)
-        # print(f"305 - self.proximo: {self.proximo}")
-            
-        hop_count += 1
-        mensagem = f"{endereco_origem} {sequencia} {ttl} SEARCH BP {self.porta} {chave} 1"
+
+        mensagem = f"{endereco_origem} {sequencia} {ttl} SEARCH BP {self.porta} {chave} {hop_count + 1}"
         self.enviar_mensagem(self.proximo, mensagem)
         
     def reseta_busca_profundidade(self):
