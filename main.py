@@ -1,7 +1,7 @@
 import argparse
 from time import sleep
 from sistema_p2p import SistemaP2P
-
+from threading import Thread
 
 class Main:
     @staticmethod
@@ -115,4 +115,6 @@ Escolha o comando
 
 
 if __name__ == "__main__":
-    Main.run()
+    main_thread = Thread(target=Main.run, daemon=False)
+    main_thread.start()
+    # Main.run()
