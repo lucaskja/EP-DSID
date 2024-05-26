@@ -286,10 +286,10 @@ Estatisticas
 
         # Verifica se é a primeira vez que a mensagem é vista
         if (endereco_origem, int(sequencia)) not in self.mensagens_vistas_busca_profundidade:
+            self.reseta_busca_profundidade()
             # Adiciona o endereço origem à lista de vizinhos candidatos
             self.noh_mae = endereco_last_hop
             self.vizinhos_candidatos = self.vizinhos.copy()
-            # self.reseta_busca_profundidade()
             # Adiciona a mensagem à lista de mensagens vistas
             self.mensagens_vistas_busca_profundidade.add(
                 (endereco_origem, sequencia))
