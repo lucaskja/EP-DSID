@@ -1,6 +1,8 @@
 # EP-DSID
 
-Um Exercício-Programa para a disciplina de Desenvolvimento de Software para Internet Distribuída (DSID) do curso de Bacharelado em Sistema de Informação da Universidade de São Paulo (USP).
+Um Exercício-Programa para a disciplina de Desenvolvimento de Sistemas de Informações Distribuídos (DSID) do curso de Bacharelado em Sistema de Informação da Universidade de São Paulo (USP).
+
+Link do repositório do GitHub: https://github.com/lucaskja/EP-DSID
 
 # Participantes
 ```
